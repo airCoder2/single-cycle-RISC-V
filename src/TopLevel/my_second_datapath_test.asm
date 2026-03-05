@@ -1,0 +1,57 @@
+li x25, 0x10010000
+li x26, 0x10010100
+li x27, 0x10010000
+
+li x30, 1
+sw x30, 0(x25)
+
+li x30, 2
+sw x30, 4(x25)
+
+li x30, 3
+sw x30, 8(x25)
+
+li x30, 4
+sw x30, 12(x25)
+
+li x30, 5
+sw x30, 16(x25)
+
+li x30, 6
+sw x30, 20(x25)
+
+li x30, 7
+sw x30, 24(x25)
+
+
+
+
+
+lw x1 , 0( x25) # Load A[0] into x1
+lw x2 , 4( x25) # Load A[1] into x2 ,
+add x1 , x1 , x2 # x1 = x1 + x2
+
+sw x1 , 0( x26) # Store x1 value into B[0]
+lw x2 , 8( x25) # Load A[2] into x2
+add x1 , x1 , x2 # x1 = x1 + x2
+sw x1 , 4( x26) # Store x1 value into B[1]
+lw x2 , 12( x25) # Load A[3] into x2
+add x1 , x1 , x2 # x1 = x1 + x2
+sw x1 , 8( x26) # Store x1 value into B[2]
+lw x2 , 16( x25) # Load A[4] into x2
+add x1 , x1 , x2 # x1 = x1 + x2
+sw x1 , 12( x26) # Store x1 value into B[3]
+lw x2 , 20( x25) # Load A[5] into x2
+add x1 , x1 , x2 # x1 = x1 + x2
+sw x1 , 16( x26) # Store x1 value into B[4]
+lw x2 , 24( x25) # Load A[6] into x2
+add x1 , x1 , x2 # x1 = x1 + x2
+
+
+addi x27 , x27 , 512 # Load &B[64] into x27 , assumuning x27 initially
+
+sw x1 , -4(x27) # Store x1 into B[63]
+sw x1 , -4(x27) # Store x1 into B[63]
+
+
+wfi

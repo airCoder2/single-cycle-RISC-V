@@ -1,0 +1,20 @@
+
+# --- QuestaSim/ModelSim Files ---
+
+
+# Ignore libraries, logs, and simulation results
+work/
+*.wlf
+transcript
+vsim.wlf
+*.log
+*.vstf
+*.vcd
+*.vpd
+
+# Ignore simulation-generated temporary files
+*.tmp
+*.bak
+*.cf
+
+
