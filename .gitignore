@@ -11,6 +11,7 @@ vsim.wlf
 *.vstf
 *.vcd
 *.vpd
+modelsim.ini
 
 # Ignore simulation-generated temporary files
 *.tmp

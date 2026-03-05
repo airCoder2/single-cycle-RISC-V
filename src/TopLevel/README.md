@@ -1,3 +1,3 @@
-- Alhamdulillah
+**Alhamdulillah**
 
-THis is my Second RISCV datapath. To compile everying and start simulation just run the do file in Questasim Transcript.
+Getting started with building my RISC-V processor
