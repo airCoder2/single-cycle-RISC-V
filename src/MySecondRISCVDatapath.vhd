@@ -101,6 +101,7 @@ architecture structural of MySecondRISCVDatapath is
     signal Alu_or_mem_data_wire : std_logic_vector(31 downto 0);
 
 
+
 begin
 	REG_FILE: Register_file
 			port map(

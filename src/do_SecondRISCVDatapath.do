@@ -5,10 +5,10 @@ vmap work work
 
 vcom -2008 N_bit_mux/*.vhd
 
-vcom -2008 AddSub_immediate/AddSub/OnesComp/*.vhd
-vcom -2008 AddSub_immediate/AddSub/Adder/*.vhd
-vcom -2008 AddSub_immediate/AddSub/*.vhd
-vcom -2008 AddSub_immediate/*.vhd
+vcom -2008 ALU/AddSub_immediate/AddSub/OnesComp/*.vhd
+vcom -2008 ALU/AddSub_immediate/AddSub/Adder/*.vhd
+vcom -2008 ALU/AddSub_immediate/AddSub/*.vhd
+vcom -2008 ALU/AddSub_immediate/*.vhd
 
 
 vcom -2008 RegFile/bus_types_pkg.vhd
