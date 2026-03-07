@@ -12,9 +12,10 @@ set WAIT_TIME_INTEGER [string trimright $WAIT_TIME "ns"]
 catch { vdel -all -lib work }
 vlib work
 vmap work work
-vcom -2008 ../../RISCV_types.vhd
+
 vcom -2008 *.vhd
-vsim -g ITERATIONS=${TEST_VALUE_COUNT} -g WAIT_TIME=${WAIT_TIME} work.tb_Mux_32_to_1 -voptargs=+acc
-add wave sim:/tb_Mux_32_to_1/*
+
+vsim -g ITERATIONS=${TEST_VALUE_COUNT} -g WAIT_TIME=${WAIT_TIME} work.tb_Decoder_4_to_16 -voptargs=+acc
+add wave sim:/tb_Decoder_4_to_16/*
 run [expr {$TEST_VALUE_COUNT * $WAIT_TIME_INTEGER}]
 

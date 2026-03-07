@@ -5,7 +5,7 @@
 
 library IEEE;
 use IEEE.std_logic_1164.all;
-use work.bus_types_pkg.all;
+use work.RISCV_types.all;
 
 entity Bus_32_bit_Mux_32_to_1 is
 

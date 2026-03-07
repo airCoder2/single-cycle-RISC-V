@@ -9,7 +9,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use ieee.numeric_std.ALL;
 use IEEE.math_real.all;
-use work.bus_types_pkg.all;
+use work.RISCV_types.all;
 
 entity Register_file is
 

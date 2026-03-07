@@ -57,7 +57,9 @@ begin
 					 A => A,
 					 B => immediate_B_Mux_out,
 					 nAdd_Sub => nAdd_Sub,
-					 sum => sum);
+					 sum => sum,
+                     c_out => open,
+                     overflow => open);
 					 -- don't need c_out and overflow
 
 end architecture structural;

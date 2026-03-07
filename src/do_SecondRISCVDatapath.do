@@ -3,6 +3,7 @@ vlib work
 vmap work work
 
 
+vcom -2008 RISCV_types.vhd
 vcom -2008 N_bit_mux/*.vhd
 
 vcom -2008 ALU/AddSub_immediate/AddSub/OnesComp/*.vhd
@@ -11,7 +12,6 @@ vcom -2008 ALU/AddSub_immediate/AddSub/*.vhd
 vcom -2008 ALU/AddSub_immediate/*.vhd
 
 
-vcom -2008 RegFile/bus_types_pkg.vhd
 vcom -2008 RegFile/Structural_mux/*.vhd
 vcom -2008 RegFile/One_bit_register/*.vhd
 vcom -2008 RegFile/N_bit_register/*.vhd
