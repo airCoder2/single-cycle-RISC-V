@@ -9,10 +9,10 @@ use IEEE.std_logic_1164.all;
 
 
 entity PC is
-    port(i_pc_in  : in  std_logic_vector(31 downto 0);
-         o_pc_out : out std_logic_vector(31 downto 0);
-         i_reset  : in  std_logic;
-         i_clk    : in  std_logic);
+    port(i_pc_in  : in  std_logic_vector(31 downto 0); -- new data to be written
+         o_pc_out : out std_logic_vector(31 downto 0); -- pc output
+         i_reset  : in  std_logic; -- reset to 0
+         i_clk    : in  std_logic); -- clock
 end entity PC;
 
 architecture structural of PC is

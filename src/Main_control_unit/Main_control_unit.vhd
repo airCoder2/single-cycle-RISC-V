@@ -16,7 +16,8 @@ entity Main_control_unit is
          o_mem_WE  : out std_logic; -- control to when data mem can be written
          o_zero_sign: out std_logic; -- control either zero or sign extend 
          o_ALU_mem : out std_logic;  -- control for writing to reg from ALU or memory
-         o_reg_file_WE  : out std_logic  -- control for when data to reg file is written 
+         o_reg_file_WE  : out std_logic;  -- control for when data to reg file is written 
+         o_halt : out std_logic --used as wfi
 
         );
 	
@@ -33,7 +34,7 @@ architecture behavioral of Main_control_unit is
     constant OP_JALR   : std_logic_vector(6 downto 0) := "1100111";
     constant OP_LUI    : std_logic_vector(6 downto 0) := "0110111";
     constant OP_AUIPC  : std_logic_vector(6 downto 0) := "0010111";
-
+    constant OP_HALT   : std_logic_vector(6 downto 0) := "1110011";
 
 begin
     with i_Opcode select
@@ -85,6 +86,11 @@ begin
             '1' when OP_ITYPE, -- I type instructions like addi use sign extended immediates
             '1' when OP_LOAD,  -- Load uses sign extended immediate
             '1' when OP_STORE, -- Store uses sign extended immediate
+            '0' when others;
+
+    with i_Opcode select
+        o_halt <=
+            '1' when OP_HALT, 
             '0' when others;
 
 end behavioral;

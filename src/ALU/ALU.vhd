@@ -9,13 +9,12 @@ use IEEE.std_logic_1164.all;
 use work.RISCV_types.all;
 
 entity ALU is
-	port( i_reg1_data  	 : in std_logic_vector(31 downto 0);
-		  i_reg2_data    : in std_logic_vector(31 downto 0);
-		  i_extended_imm : in std_logic_vector(31 downto 0);
-          i_ALU_control  : out std_logic_vector(3 downto 0));
-		  i_ALU_src      : in std_logic;
-	      i_nAdd_Sub     : in std_logic;
-		  o_ALU_out      : out std_logic_vector(31 downto 0)); -- outputs is +1 of inputs
+	port( i_reg1_data  	 : in std_logic_vector(31 downto 0);   -- 1st reg data
+		  i_reg2_data    : in std_logic_vector(31 downto 0);   -- 2nd reg data
+		  i_extended_imm : in std_logic_vector(31 downto 0);   -- imm data 
+          i_ALU_control  : in std_logic_vector(3 downto 0);    -- ALU conrol bus
+		  i_ALU_src      : in std_logic;                       -- flag from control unit
+		  o_ALU_out      : out std_logic_vector(31 downto 0)); -- output
 end entity ALU;
 
 architecture structural of ALU is
@@ -40,37 +39,38 @@ architecture structural of ALU is
 
     -- 16 to 1 bus mux
     component Bus_32_bit_Mux_16_to_1 is
-        port(BUS_IN     : in reg_outs_t; --defined inside the package I made
+        port(BUS_IN     : in alu_outs_t; --defined inside the package I made
              SELECT_IN  : in std_logic_vector(3 downto 0);
              MUX_OUT    : out std_logic_vector(31 downto 0));
     end component Bus_32_bit_Mux_16_to_1;
+
+    signal s_decoder_out           : std_logic_vector(15 downto 0);
+
+    signal s_ALU_results : alu_outs_t;
+    
 
 
 begin
     Adder_subtractor: Adder_Subtractor_immediate
         generic map(N => 32)
-        port map( 
-                 A 	      => , 
-                 B        => , 
-                 imm      => , 
-                 ALU_src  => ,
-                 nAdd_Sub => , 
-                 sum      => );
-    end component Adder_Subtractor_immediate;
+        port map(A 	      => i_reg1_data, 
+                 B        => i_reg2_data, 
+                 imm      => i_extended_imm, 
+                 ALU_src  => i_ALU_src,
+                 nAdd_Sub => s_decoder_out(1), -- sub is ...0010
+                 sum      => s_ALU_results(0) );
 
     -- 4 to 16 decoder
-    component Decoder_4_to_16 is
-        port(EN_IN   => ,
-             CODE_IN => , 
-             F_OUT   => );
-    end component Decoder_4_to_16;
+    Decoder_inst: Decoder_4_to_16
+        port map(EN_IN => '1', --always 1
+             CODE_IN   => i_ALU_control, 
+             F_OUT     => s_decoder_out);
 
     -- 16 to 1 bus mux
-    component Bus_32_bit_Mux_16_to_1 is
-        port(BUS_IN    => ,
-             SELECT_IN => ,
-             MUX_OUT   => );
-    end component Bus_32_bit_Mux_16_to_1;
+    Bus_mux_inst: Bus_32_bit_Mux_16_to_1
+        port map(BUS_IN    => s_ALU_results,
+             SELECT_IN => i_ALU_control,
+             MUX_OUT   => o_ALU_out);
 
 
 

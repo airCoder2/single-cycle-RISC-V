@@ -9,7 +9,7 @@ use work.RISCV_types.all;
 
 entity Bus_32_bit_Mux_16_to_1 is
 
-	port(BUS_IN     : in reg_outs_t; --defined inside the package I made
+	port(BUS_IN     : in alu_outs_t; 
 		 SELECT_IN  : in std_logic_vector(3 downto 0);
 	     MUX_OUT    : out std_logic_vector(31 downto 0));
 
@@ -25,7 +25,7 @@ architecture structural of Bus_32_bit_Mux_16_to_1 is
 
 begin
   -- Instantiate N mux instances, 
-	G_NBit_bus_MUX_I: for i in 0 to 15 generate
+	G_NBit_bus_MUX_I: for i in 0 to 31 generate
 		MUXI: Mux_16_to_1 port map(
 		DATA_IN => (
 			0  => BUS_IN(0)(i),
@@ -43,7 +43,8 @@ begin
 			12 => BUS_IN(12)(i),
 			13 => BUS_IN(13)(i),
 			14 => BUS_IN(14)(i),
-			15 => BUS_IN(15)(i)),
+			15 => BUS_IN(15)(i)
+        ),
 
 		SELECT_IN    => SELECT_IN,
 		MUX_OUT      => MUX_OUT(i));      -- All instances share the same select input.

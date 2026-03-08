@@ -1,4 +1,4 @@
--- Date        : March 25, 2026
+-- Date        : March 5, 2026
 -- File        : PC_adder.vhd     
 -- Designer    : Salah Nasriddinov
 -- Description : This file implements a PC adder that adds 4
@@ -9,8 +9,8 @@ use IEEE.std_logic_1164.all;
 
 
 entity PC_adder is
-    port(i_current_pc : in  std_logic_vector(31 downto 0);
-         o_new_pc     : out std_logic_vector(31 downto 0));
+    port(i_current_pc : in  std_logic_vector(31 downto 0); -- current pc, 
+         o_new_pc     : out std_logic_vector(31 downto 0)); -- output (current + 4)
 end PC_adder;
 
 

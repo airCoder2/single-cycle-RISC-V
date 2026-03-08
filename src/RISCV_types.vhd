@@ -18,6 +18,10 @@ package RISCV_types is
 	-- 32 inputs x 32-bite wide
 	type reg_outs_t is array(31 downto 0) of std_logic_vector(31 downto 0); -- type for signal 
 
+	-- 16 inputs x 32-bite wide
+	type alu_outs_t is array(15 downto 0) of std_logic_vector(31 downto 0); -- type for signal 
+
+
 end package RISCV_types;
 
 package body RISCV_types is
