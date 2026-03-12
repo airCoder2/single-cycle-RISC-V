@@ -51,6 +51,8 @@ architecture structural of ALU is
 
 
 begin
+    s_ALU_results(1) <= s_ALU_results(0); -- both addition and subtraction comes out of the same place
+
     Adder_subtractor: Adder_Subtractor_immediate
         generic map(N => 32)
         port map(A 	      => i_reg1_data, 
