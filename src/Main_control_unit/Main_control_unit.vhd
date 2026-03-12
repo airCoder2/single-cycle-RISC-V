@@ -40,7 +40,7 @@ begin
     with i_Opcode select
         o_ALU_op <=
             2b"10" when OP_RTYPE, -- depends on func3 and func7
-            2b"10" when OP_ITYPE, -- depends on func3 and func7
+            2b"11" when OP_ITYPE, -- depends on func3 and func7
             2b"00" when OP_LOAD,  -- add immediate + addr to generate full address
             2b"00" when OP_STORE, -- add immediate + addr to generate full address
             2b"00" when others; 

@@ -32,26 +32,35 @@ architecture behavioral of ALU_control_unit is
     constant ALU_XOR : std_logic_vector(3 downto 0) := "0100";
     constant ALU_SLL : std_logic_vector(3 downto 0) := "0101";
     constant ALU_SRL : std_logic_vector(3 downto 0) := "0110";
-    constant ALU_SLA : std_logic_vector(3 downto 0) := "0111";
-    constant ALU_SRA : std_logic_vector(3 downto 0) := "1000";
+    constant ALU_SRA : std_logic_vector(3 downto 0) := "0111";
+    constant ALU_SLT : std_logic_Vector(3 downto 0) := "1000";
 
 
 begin
 
     o_ALU_control <=
         -- Main control cases
-        ALU_ADD when i_ALU_op = "00" else  -- load/store
-        ALU_SUB when i_ALU_op = "01" else  -- branch comparison
+        ALU_ADD when ((i_ALU_op = "00") or  -- load, store
+                      (i_ALU_op = "10" and i_func3 = "000") or -- addi
+                      (i_ALU_op = "11" and i_func3 = "000" and i_func7_5 = '0')) else -- add
 
-        -- For no conclusion cases
-        ALU_ADD when i_func3 = "000" and i_func7_5 = '0' else
-        ALU_SUB when i_func3 = "000" and i_func7_5 = '1' else
+
+        ALU_SUB when ((i_ALU_op = "01") or -- branch 
+                      (i_ALU_op = "11" and i_func3 = "000" and i_func7_5 = '1')) else -- sub 
+
         ALU_SLL when i_func3 = "001" else
-        --ALU_SLT when i_func3 = "010" else
+
+        ALU_SLT when i_func3 = "010" else
+
         ALU_XOR when i_func3 = "100" else
+
         ALU_SRL when i_func3 = "101" and i_func7_5 = '0' else
+
         ALU_SRA when i_func3 = "101" and i_func7_5 = '1' else
+
+
         ALU_OR  when i_func3 = "110" else
+
         ALU_AND when i_func3 = "111" else
 
         ALU_ADD; -- default

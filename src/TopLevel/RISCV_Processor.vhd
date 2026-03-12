@@ -1,3 +1,16 @@
+-- Date        : March 5, 2026
+-- File        : RISCV_Processor.vhd     
+-- Designer    : Salah Nasriddinov
+-- Description : This file implements a single cycle risc-v processor 
+-- Components  : Register file, AddSub_immediatee, Extenders, Slicer, 2to1 N bit mux,
+              -- control unit, ALU control unit, Data Memory, Instruction Memory,
+              -- Program Counter, PC Adder
+
+-- Updates:
+-- Mar 8 04:10 -> Alhamdulillah addi passed test. not synthesizing
+
+
+
 library IEEE;
 use IEEE.std_logic_1164.all;
 

@@ -28,7 +28,6 @@ architecture structural of Adder_Subtractor_immediate is
 			  sum      : out std_logic_vector(N-1 downto 0); -- outputs is +1 of inputs
 			  c_out    : out std_logic;
 			  overflow : out std_logic);
-
 	end component Adder_Subtractor;
 
 	component mux2t1_N_dataflow is
@@ -40,27 +39,34 @@ architecture structural of Adder_Subtractor_immediate is
 	end component mux2t1_N_dataflow;
 
 	signal immediate_B_Mux_out : std_logic_vector(N-1 downto 0);
+    signal trash : std_logic;
+    signal bin : std_logic;
 
 begin
+
+    Add_Subtractor: Adder_Subtractor
+            generic map(N => N)
+            port map(
+                     A => A,
+                     B => immediate_B_Mux_out,
+                     nAdd_Sub => nAdd_Sub,
+                     sum => sum,
+                     c_out => trash,
+                     overflow => bin);
+                     -- don't need c_out and overflow
+
 	mux2t1_N: mux2t1_N_dataflow
-			generic map(N => N)
+			generic map(N => 32)
 			port map(
 					 i_S => ALU_src,
 					 i_D0 => B,
 				 	 i_D1 => imm,
 					 o_O  => immediate_B_Mux_out);
+        
+
+            
 
 
-	Add_Subtractor: Adder_Subtractor
-			generic map(N => N)
-			port map(
-					 A => A,
-					 B => immediate_B_Mux_out,
-					 nAdd_Sub => nAdd_Sub,
-					 sum => sum,
-                     c_out => open,
-                     overflow => open);
-					 -- don't need c_out and overflow
 
 end architecture structural;
 
