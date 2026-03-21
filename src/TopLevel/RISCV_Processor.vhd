@@ -117,6 +117,15 @@ architecture structure of RISCV_Processor is
            o_O          : out std_logic_vector(N-1 downto 0));
     end component mux2t1_N_dataflow;
 
+    component Byte_half_word_selector is
+        port (
+              i_mem_out_word  : in std_logic_vector(31 downto 0); -- the full word
+              i_mem_b_hw_addr : in std_logic_vector(1 downto 0);  -- the two sliced lsbs of full address
+              i_func3         : in std_logic_vector(2 downto 0);
+              o_selected_data : out std_logic_vector(31 downto 0)
+          );
+    end component Byte_half_word_selector;
+
     ----------------- SIGNALS ---------------
 
     -- Required data memory signals
@@ -156,6 +165,7 @@ architecture structure of RISCV_Processor is
     signal s_ALU_select : std_logic_vector(2 downto 0); -- ALU mux select
     signal s_ALU_nAdd_sub : std_logic; -- ALU add or sub flag, driven by ALU control unit
     signal s_ALU_out : std_logic_vector(31 downto 0);
+    signal s_selected_mem_data : std_logic_vector(31 downto 0); -- this is after it goes through selector, final data to be written
 
 begin
     s_Ovfl <= '0'; -- RISC-V does not have hardware overflow detection.
@@ -271,12 +281,20 @@ begin
                  o_ALU_out      => s_ALU_out --must, because ALU out is also connected to Dmem Addr
              ); 
 
+    Selector_ins: Byte_half_word_selector
+        port map(
+              i_mem_out_word  => s_DMemOut,
+              i_mem_b_hw_addr => s_DMemAddr(1 downto 0),
+              i_func3         => s_Inst(14 downto 12),
+              o_selected_data => s_selected_mem_data
+          );
+
     Mux2t1_N_dataflow_inst:  mux2t1_N_dataflow
             generic map(N => 32)
             port map(
                      i_S  => s_ALU_mem,
                      i_D0 => s_ALU_out, --change its name and assign DMemData to that because now confusing
-                     i_D1 => s_DMemOut, --must
+                     i_D1 => s_selected_mem_data, --must
                      o_O  => s_RegWrData); --must
 
     -- s_Halt is connected to an output control from decoding the Halt instruction (Opcode: 01 0100)
