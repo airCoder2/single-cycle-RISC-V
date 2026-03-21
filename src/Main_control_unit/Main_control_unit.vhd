@@ -87,6 +87,8 @@ begin
     with i_Opcode select
         o_Imm_select <=
             3b"000" when OP_ITYPE, -- I type instructions like addi use sign extended immediates
+            3b"000" when OP_LOAD,  -- LOAD is an I type instruction with unique flags. So same extension works 
+            3b"001" when OP_STORE, -- STORE is its own type, and thus choses a unique extended immediate
             3b"011" when OP_LUI,   -- LUI has a uniquie opcode, but bot AUIPC and LUI use the same imm
             3b"000" when others;
 

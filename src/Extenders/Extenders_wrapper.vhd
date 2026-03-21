@@ -34,8 +34,17 @@ architecture structural of Extenders_wrapper is
             );
     end component U_type_extender;
 
+    component S_type_extender is
+        port(
+             i_imm_1  : in std_logic_vector(31 downto 25); --first portion 
+             i_imm_2  : in std_logic_vector(11 downto 7);  -- second portion
+             o_extended_imm : out std_logic_vector(31 downto 0)
+            );
+    end component S_type_extender;
+
     signal s_I_type_extended_imm : std_logic_vector(31 downto 0);
     signal s_U_type_extended_imm : std_logic_vector(31 downto 0);
+    signal s_S_type_extended_imm : std_logic_vector(31 downto 0);
 
 begin
     I_extender_inst: I_type_extender
@@ -50,9 +59,17 @@ begin
                 o_extended_imm => s_U_type_extended_imm
             );
 
+    S_extender_inst: S_type_extender
+            port map(
+                i_imm_1        => i_instruction(31 downto 25),
+                i_imm_2        => i_instruction(11 downto 7),
+                o_extended_imm => s_S_type_extended_imm
+            );
+
     with i_imm_select select
         o_extended_imm <= s_I_type_extended_imm when 3b"000",
                           s_U_type_extended_imm when 3b"011",
+                          s_S_type_extended_imm when 3b"001",
                           32x"00000000" when others;
             
 
