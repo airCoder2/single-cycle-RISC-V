@@ -5,7 +5,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 
 entity Adder_Subtractor is
-	generic (N : integer := 8);
+	generic (N : integer := 32);
 	port( A  	   : in std_logic_vector(N-1 downto 0);
 		  B        : in std_logic_vector(N-1 downto 0);
 	      nAdd_Sub : in std_logic;

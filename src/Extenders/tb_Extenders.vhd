@@ -13,71 +13,40 @@ end entity tb_Extenders;
 
 architecture behavioral of tb_Extenders is
 
-    component Extenders is
+    component Extenders_wrapper is
         port(
-             DATA_IN  : in std_logic_vector(11 downto 0);
-             FLAG_IN  : in std_logic;
-             DATA_OUT : out std_logic_vector(31 downto 0)
+             i_instruction  : in std_logic_vector(31 downto 7);
+             i_imm_select   : in std_logic_vector(2 downto 0);
+             o_extended_imm : out std_logic_vector(31 downto 0)
             );
     end component;
 
-    signal FLAG_IN_wire  : std_logic;
-    signal DATA_IN_wire  : std_logic_vector(11 downto 0);
-    signal DATA_OUT_wire : std_logic_vector(31 downto 0);
+    signal s_instruction  : std_logic_vector(31 downto 7);
+    signal s_imm_select  : std_logic_vector(2 downto 0);
+    signal s_out         : std_logic_vector(31 downto 0);
 
 begin
-    DUT: Extenders
+    DUT: Extenders_wrapper
         port map(
-                 DATA_IN  => DATA_IN_wire,
-                 FLAG_IN  => FLAG_IN_wire,
-                 DATA_OUT => DATA_OUT_wire);
+                 i_instruction  => s_instruction,
+                 i_imm_select  => s_imm_select,
+                 o_extended_imm => s_out);
 
     process
     begin
 
-        DATA_IN_wire <= b"1010_0000_1111";
-        FLAG_IN_wire <= '0';
+        s_instruction <= 25b"1111000000000000000000000";
+        s_imm_select <= 3b"000";
         wait for 10 ns;
         
-        DATA_IN_wire <= b"0010_0000_1111";
-        FLAG_IN_wire <= '1';
+        s_instruction <= 25b"0111000000000000000000000";
+        s_imm_select <= 3b"000";
+        wait for 10 ns;
+
+        s_instruction <= 25b"1000000000000000000000000";
+        s_imm_select <= 3b"000";
         wait for 10 ns;
         
-        DATA_IN_wire <= b"1010_1110_1111";
-        FLAG_IN_wire <= '0';
-        wait for 10 ns;
-        
-        DATA_IN_wire <= b"1010_0000_1111";
-        FLAG_IN_wire <= '0';
-        wait for 10 ns;
-        
-        DATA_IN_wire <= b"0010_0000_1111";
-        FLAG_IN_wire <= '1';
-        wait for 10 ns;
-        
-        DATA_IN_wire <= b"1010_0000_1111";
-        FLAG_IN_wire <= '1';
-        wait for 10 ns;
-        
-        DATA_IN_wire <= b"1010_0000_1111";
-        FLAG_IN_wire <= '1';
-        wait for 10 ns;
-        
-        DATA_IN_wire <= b"1010_1111_1111";
-        FLAG_IN_wire <= '0';
-        wait for 10 ns;
-        
-        DATA_IN_wire <= b"1000_0000_1111";
-        FLAG_IN_wire <= '0';
-        wait for 10 ns;
-        
-        DATA_IN_wire <= b"1010_0000_1111";
-        FLAG_IN_wire <= '1';
-        wait for 10 ns;
-        
-        DATA_IN_wire <= b"0010_0000_1111";
-        FLAG_IN_wire <= '1';
-        wait for 10 ns;
 
         wait;
     end process;

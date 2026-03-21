@@ -70,33 +70,33 @@ architecture structure of RISCV_Processor is
     end component Register_file;
 
     component ALU is
-        port( i_reg1_data  	 : in std_logic_vector(31 downto 0);   -- 1st reg data
-              i_reg2_data    : in std_logic_vector(31 downto 0);   -- 2nd reg data
-              i_extended_imm : in std_logic_vector(31 downto 0);   -- imm data 
-              i_ALU_control  : in std_logic_vector(3 downto 0);    -- ALU conrol bus
-              i_ALU_src      : in std_logic;                       -- flag from control unit
+        port( i_A        	 : in std_logic_vector(31 downto 0);   -- 1st operand rs1/pc
+              i_B            : in std_logic_vector(31 downto 0);   -- 2nd operand rs2/imm
+              i_ALU_select   : in std_logic_vector(2 downto 0);    -- ALU mux select
+              i_ALU_nAdd_sub : in std_logic;                       -- ALU add sub control
+              i_ALU_lui      : in std_logic;                       -- mux select to chose shifted lui imm
               o_ALU_out      : out std_logic_vector(31 downto 0)); -- output
     end component ALU;
 
-
-    component Extenders is
+    component Extenders_wrapper is
         port(
-             DATA_IN  : in std_logic_vector(11 downto 0);
-             FLAG_IN  : in std_logic;
-             DATA_OUT : out std_logic_vector(31 downto 0)
+             i_instruction  : in std_logic_vector(31 downto 7);
+             i_imm_select   : in std_logic_vector(2 downto 0);
+             o_extended_imm : out std_logic_vector(31 downto 0)
             );
-    end component Extenders;
+    end component Extenders_wrapper;
 
     component Main_control_unit is
         port(
-             i_Opcode  : in std_logic_vector(6 downto 0); -- the opcode we are decoding
-             o_ALU_op  : out std_logic_vector(1 downto 0); -- two bit ALU opcode
-             o_ALU_src : out std_logic; -- control for choosing between imm or rs2 out
-             o_mem_WE  : out std_logic; -- control to when data mem can be written
-             o_zero_sign: out std_logic; -- control either zero or sign extend 
-             o_ALU_mem : out std_logic;  -- control for writing to reg from ALU or memory
-             o_reg_file_WE  : out std_logic;  -- control for when data to reg file is written 
-             o_halt : out std_logic --used as wfi
+            i_Opcode  : in std_logic_vector(6 downto 0); -- the opcode we are decoding
+            o_ALU_op  : out std_logic_vector(1 downto 0); -- two bit ALU opcode
+            o_Imm_select : out std_logic_vector(2 downto 0); -- which immediate ALU should use  
+            o_ALU_src : out std_logic; -- control for choosing between imm or rs2 out
+            o_mem_WE  : out std_logic; -- control to when data mem can be written
+            o_ALU_mem : out std_logic;  -- control for writing to reg from ALU or memory
+            o_reg_file_WE  : out std_logic;  -- control for when data to reg file is written 
+            o_lui     : out std_logic; -- when 1, routes immediate and not the ALU out to reg
+            o_halt : out std_logic --used as wfi
             );
     end component Main_control_unit;
 
@@ -105,7 +105,8 @@ architecture structure of RISCV_Processor is
         port(i_alu_op      : in  std_logic_vector(1 downto 0);
              i_func3       : in  std_logic_vector(2 downto 0);
              i_func7_5     : in  std_logic;
-             o_alu_control : out std_logic_vector(3 downto 0));
+             o_alu_select  : out std_logic_vector(2 downto 0); -- choose what output should chose
+             o_nAdd_sub    : out std_logic); -- add subtraction flag for ALU
     end component ALU_control_unit;
 
     component mux2t1_N_dataflow is
@@ -146,11 +147,14 @@ architecture structure of RISCV_Processor is
     signal s_DATA_TO_READ1 : std_logic_vector(31 downto 0); -- the 1st output of reg file
     signal s_DATA_TO_READ2 : std_logic_vector(31 downto 0); -- the 2nd output of reg file
     signal s_Extended_imm  : std_logic_vector(31 downto 0); -- connected to ALU's imm
+    signal s_Imm_select    : std_logic_vector(2 downto 0);  -- select with extended immediate ALU should use
+    signal s_ALU_B         : std_logic_vector(31 downto 0); -- one of rs2 or imm
+    signal s_ALU_lui       : std_logic;  -- signal that goes to ALU, so it routes shifted immediate directly to reg when lui
     signal s_ALU_op : std_logic_vector(1 downto 0); -- ALU opcode
     signal s_ALU_src : std_logic; -- reg2 or imm
-    signal s_zero_sign : std_logic; -- zero extend or sign extend
     signal s_ALU_mem   : std_logic; -- ALU or memory data written to reg file
-    signal s_ALU_control : std_logic_vector(3 downto 0); -- ALU opocde
+    signal s_ALU_select : std_logic_vector(2 downto 0); -- ALU mux select
+    signal s_ALU_nAdd_sub : std_logic; -- ALU add or sub flag, driven by ALU control unit
     signal s_ALU_out : std_logic_vector(31 downto 0);
 
 begin
@@ -221,11 +225,12 @@ begin
         port map(
                  i_Opcode      => s_Inst(6 downto 0), --must
                  o_ALU_op      => s_ALU_op,
+                 o_Imm_select  => s_Imm_select,
                  o_ALU_src     => s_ALU_src,
                  o_mem_WE      => s_DMemWr, --must
-                 o_zero_sign   => s_zero_sign,
                  o_ALU_mem     => s_ALU_mem,
                  o_reg_file_WE => s_RegWr, -- must
+                 o_lui         => s_ALU_lui, -- chose shifter lui imm over ALU output
                  o_halt        => s_Halt --must
             );
 
@@ -235,24 +240,34 @@ begin
                  i_alu_op      => s_ALU_op,
                  i_func3       => s_Inst(14 downto 12), -- must 
                  i_func7_5     => s_Inst(30), --must
-                 o_alu_control => s_ALU_control
+                 o_alu_select  => s_ALU_select, -- ALU mux select
+                 o_nAdd_sub    => s_ALU_nAdd_sub -- add sub flag
                  );
 
 
-    Extenders_s: Extenders
+    Extenders_s: Extenders_wrapper
             port map(
-                     DATA_IN  => s_Inst(31 downto 20), --must
-                     FLAG_IN  => s_zero_sign,  
-                     DATA_OUT => s_Extended_imm
+                     i_instruction  => s_Inst(31 downto 7), --must
+                     i_imm_select   => s_Imm_select, 
+                     o_extended_imm => s_Extended_imm
                  );
+
+    -- select either rs2 or extended imm
+    Mux2t1_N_ALU_B:  mux2t1_N_dataflow
+            generic map(N => 32)
+            port map(
+                     i_S  => s_ALU_src,
+                     i_D0 => s_DATA_TO_READ2,
+                     i_D1 => s_Extended_imm,
+                     o_O  => s_ALU_B); 
 
     ALU_inst: ALU
         port map( 
-                 i_reg1_data    => s_DATA_TO_READ1, 
-                 i_reg2_data    => s_DATA_TO_READ2, 
-                 i_extended_imm => s_Extended_imm,
-                 i_ALU_control  => s_ALU_control,
-                 i_ALU_src      => s_ALU_src,
+                 i_A            => s_DATA_TO_READ1, 
+                 i_B            => s_ALU_B, 
+                 i_ALU_select   => s_ALU_select,
+                 i_ALU_nAdd_sub => s_ALU_nAdd_sub,
+                 i_ALU_lui      => s_ALU_lui,
                  o_ALU_out      => s_ALU_out --must, because ALU out is also connected to Dmem Addr
              ); 
 
