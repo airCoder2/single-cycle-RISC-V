@@ -14,6 +14,7 @@ entity ALU is
           i_ALU_select   : in std_logic_vector(2 downto 0);    -- ALU mux select
           i_ALU_nAdd_sub : in std_logic;                       -- ALU add sub control
           i_ALU_lui      : in std_logic;                       -- mux select to chose shifted lui imm
+          i_jal_or_jalr  : in std_logic;                       -- mux select that adds 0x4 to A
           o_eq           : out std_logic;
           o_lt           : out std_logic;
           o_ltu          : out std_logic;
@@ -33,6 +34,14 @@ architecture structural of ALU is
               c_out    : out std_logic;
               overflow : out std_logic);
     end component Adder_Subtractor;
+
+    component mux2t1_N_dataflow is
+        generic(N : integer); -- Generic of type integer for input/output data width. Default value is 32.
+        port(i_S          : in std_logic;
+           i_D0         : in std_logic_vector(N-1 downto 0);
+           i_D1         : in std_logic_vector(N-1 downto 0);
+           o_O          : out std_logic_vector(N-1 downto 0));
+    end component mux2t1_N_dataflow;
 
     component AND_unit is
         port (
@@ -67,16 +76,28 @@ architecture structural of ALU is
     signal s_unsigned_is_A_lt_B : std_logic;
     signal s_eq : std_logic;
 
+    signal s_muxed_B_out : std_logic_vector(31 downto 0);
+
 begin
 
     -- adder subtract unit
     Adder_subtractor_inst: Adder_Subtractor
         generic map(N => 32)
         port map(A 	      => i_A, 
-                 B        => i_B, 
+                 B        => s_muxed_B_out,  -- either B or 0x4 for jal, jalr 
                  nAdd_Sub => i_ALU_nAdd_sub, -- driven by ALU_control unit
                  sum      => s_Adder_out,
                  overflow => s_Adder_overflow);
+
+
+    -- select either rs1 or extended PC
+    Mux2t1_B_or_PC:  mux2t1_N_dataflow
+            generic map(N => 32)
+            port map(
+                     i_S  => i_jal_or_jalr,
+                     i_D0 => i_B,
+                     i_D1 => 32x"00000004",
+                     o_O  => s_muxed_B_out); 
 
     AND_unit_inst: AND_unit
         port map(

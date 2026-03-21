@@ -80,17 +80,18 @@ architecture structure of RISCV_Processor is
     end component Register_file;
 
     component ALU is
-	port( i_A        	 : in std_logic_vector(31 downto 0);   -- 1st operand rs1/pc
-		  i_B            : in std_logic_vector(31 downto 0);   -- 2nd operand rs2/imm
-          i_ALU_select   : in std_logic_vector(2 downto 0);    -- ALU mux select
-          i_ALU_nAdd_sub : in std_logic;                       -- ALU add sub control
-          i_ALU_lui      : in std_logic;                       -- mux select to chose shifted lui imm
-          o_eq           : out std_logic;
-          o_lt           : out std_logic;
-          o_ltu          : out std_logic;
-          o_ge           : out std_logic;
-          o_geu          : out std_logic;
-		  o_ALU_out      : out std_logic_vector(31 downto 0)); -- output
+        port( i_A        	 : in std_logic_vector(31 downto 0);   -- 1st operand rs1/pc
+              i_B            : in std_logic_vector(31 downto 0);   -- 2nd operand rs2/imm
+              i_ALU_select   : in std_logic_vector(2 downto 0);    -- ALU mux select
+              i_ALU_nAdd_sub : in std_logic;                       -- ALU add sub control
+              i_ALU_lui      : in std_logic;                       -- mux select to chose shifted lui imm
+              i_jal_or_jalr  : in std_logic;                       -- mux select that adds 0x4 to A
+              o_eq           : out std_logic;
+              o_lt           : out std_logic;
+              o_ltu          : out std_logic;
+              o_ge           : out std_logic;
+              o_geu          : out std_logic;
+              o_ALU_out      : out std_logic_vector(31 downto 0)); -- output
     end component ALU;
 
     component Extenders_wrapper is
@@ -102,7 +103,7 @@ architecture structure of RISCV_Processor is
     end component Extenders_wrapper;
 
     component Main_control_unit is
-        port(
+	port(
             i_Opcode  : in std_logic_vector(6 downto 0); -- the opcode we are decoding
             o_ALU_op  : out std_logic_vector(1 downto 0); -- two bit ALU opcode
             o_Imm_select : out std_logic_vector(2 downto 0); -- which immediate ALU should use  
@@ -113,8 +114,10 @@ architecture structure of RISCV_Processor is
             o_reg_file_WE  : out std_logic;  -- control for when data to reg file is written 
             o_lui     : out std_logic; -- when 1, routes immediate and not the ALU out to reg
             o_branch  : out std_logic; -- should branch or no
+            o_jal     : out std_logic;
+            o_jalr    : out std_logic;
             o_halt : out std_logic --used as wfi
-            );
+        );
     end component Main_control_unit;
 
 
@@ -194,6 +197,8 @@ architecture structure of RISCV_Processor is
     signal s_ALU_A_src : std_logic; -- reg1 or pc
     signal s_ALU_mem   : std_logic; -- ALU or memory data written to reg file
     signal s_branch    : std_logic; -- is this instruction a branch instruction
+    signal s_jal       : std_logic;
+    signal s_jalr      : std_logic;
     signal s_ALU_select : std_logic_vector(2 downto 0); -- ALU mux select
     signal s_ALU_nAdd_sub : std_logic; -- ALU add or sub flag, driven by ALU control unit
     signal s_ALU_out : std_logic_vector(31 downto 0);
@@ -201,6 +206,7 @@ architecture structure of RISCV_Processor is
     signal s_should_branch : std_logic; -- the output of the branch decision box
 
     signal s_branch_pc_addr : std_logic_vector(31 downto 0); -- in case brnach is taken calculated address
+    signal s_branch_pc_addr_input_A : std_logic_vector(31 downto 0);
 
 
     -- flags from ALU going to branch decision box
@@ -286,6 +292,8 @@ begin
                  o_reg_file_WE => s_RegWr, -- must
                  o_lui         => s_ALU_lui, -- chose shifter lui imm over ALU output
                  o_branch      => s_branch,
+                 o_jal         => s_jal,
+                 o_jalr        => s_jalr,
                  o_halt        => s_Halt --must
             );
 
@@ -332,6 +340,7 @@ begin
                  i_ALU_select   => s_ALU_select, -- which component's output should ALU output. 3 bit select
                  i_ALU_nAdd_sub => s_ALU_nAdd_sub,
                  i_ALU_lui      => s_ALU_lui, -- should we route imm << 12 directly to reg
+                 i_jal_or_jalr  => s_jal or s_jalr,
                  o_eq           => s_ALU_eq,
                  o_lt           => s_ALU_lt,
                  o_ltu          => s_ALU_ltu,
@@ -369,17 +378,25 @@ begin
               o_should_branch => s_should_branch
               );
 
+    Mux2t1_N_jalr:  mux2t1_N_dataflow
+            generic map(N => 32)
+            port map(
+                     i_S  => s_jalr,
+                     i_D0 => s_PC, 
+                     i_D1 => s_DATA_TO_READ1,
+                     o_O  => s_branch_pc_addr_input_A);
+
     Branch_adder: ripple_carry_N_bit_adder
         generic map(N => 32)
         port map(x    => s_Extended_imm,  
-                 y    => s_PC,  -- add pc to immedaite
+                 y    => s_branch_pc_addr_input_A,  -- add pc to immedaite
                  c_in => '0',  
                  sum  => s_branch_pc_addr); -- outputs is +1 of inputs
 
     Mux2t1_N_Bnst:  mux2t1_N_dataflow
             generic map(N => 32)
             port map(
-                     i_S  => s_should_branch,
+                     i_S  => s_should_branch or s_jal or s_jalr,
                      i_D0 => s_New_pc, --change its name and assign DMemData to that because now confusing
                      i_D1 => s_branch_pc_addr, --must
                      o_O  => s_Next_pc); --must

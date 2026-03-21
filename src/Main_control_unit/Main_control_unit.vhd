@@ -19,6 +19,8 @@ entity Main_control_unit is
             o_reg_file_WE  : out std_logic;  -- control for when data to reg file is written 
             o_lui     : out std_logic; -- when 1, routes immediate and not the ALU out to reg
             o_branch  : out std_logic; -- should branch or no
+            o_jal     : out std_logic;
+            o_jalr    : out std_logic;
             o_halt : out std_logic --used as wfi
         );
 	
@@ -46,6 +48,8 @@ begin
             2b"00" when OP_LOAD,  -- add immediate + addr to generate full address
             2b"00" when OP_STORE, -- add immediate + addr to generate full address
             2b"00" when OP_AUIPC, -- add pc + sign extended immediate
+            2b"00" when OP_JAL,
+            2b"00" when OP_JALR,
             2b"--" when OP_LUI,   -- LUI doesn't use any of the components
             2b"00" when others; 
             
@@ -57,6 +61,8 @@ begin
             '1' when OP_LOAD,  -- Load writes to RegFile, loads value from mem to regFile
             '0' when OP_STORE, -- Store doesn't write to RegFile, only reads it
             '1' when OP_AUIPC, 
+            '1' when OP_JAL,
+            '1' when OP_JALR,
             '1' when OP_LUI,   -- LUI writes to RegFile imm << 12
             '0' when others;
 
@@ -67,6 +73,8 @@ begin
             '0' when OP_LOAD,  -- Load doesn't write to ram, it reads it
             '0' when OP_BRANCH, -- branch doesn't write to memory 
             '0' when OP_AUIPC,
+            '0' when OP_JAL,
+            '0' when OP_JALR,
             '1' when OP_STORE, -- Store writes to ram 
             '0' when OP_LUI,   -- LUI doesn't write to memory
             '0' when others;
@@ -77,6 +85,8 @@ begin
             '0' when OP_ITYPE, -- I type instructions like addi write to reg file from ALU
             '1' when OP_LOAD,  -- Load writes to reg file from Memory
             '0' when OP_AUIPC,
+            '0' when OP_JAL,
+            '0' when OP_JALR,
             '0' when OP_LUI,   -- LUI writes to reg file from ALU output
             '-' when OP_BRANCH, -- branch doesn't write to reg file, so doesn't matter
             '-' when OP_STORE, -- Store doesn't write to reg file. Therefore, don't care
@@ -90,6 +100,8 @@ begin
             '1' when OP_LOAD,  -- Load takes operands from regFile and extended imm
             '1' when OP_STORE, -- Store takes operands from regFile and extended imm
             '1' when OP_AUIPC, -- AUIPC adds current pc to sign extended immediate
+            '-' when OP_JAL,
+            '-' when OP_JALR,
             '1' when OP_LUI,   -- LUI uses immediate and routes it to reg file through ALU
             '0' when OP_BRANCH, -- branch subtracts rs1 - rs2
             '0' when others;
@@ -100,6 +112,8 @@ begin
             '0' when OP_RTYPE, -- R type instructions like add, sub take both opearands from regFile
             '0' when OP_ITYPE, -- I type instructions like addi, take operands from regFile and extended imm
             '0' when OP_LOAD,  -- Load takes operands from regFile and extended imm
+            '1' when OP_JAL,
+            '1' when OP_JALR,
             '0' when OP_STORE, -- Store takes operands from regFile and extended imm
             '0' when OP_BRANCH, -- branch subtracts rs1 - rs2
             '-' when OP_LUI,   -- LUI uses immediate and routes it to reg file through ALU
@@ -114,11 +128,22 @@ begin
             3b"011" when OP_LUI,   -- LUI has a uniquie opcode, but both AUIPC and LUI use the same imm
             3b"011" when OP_AUIPC,   -- LUI has a uniquie opcode, but both AUIPC and LUI use the same imm
             3b"010" when OP_BRANCH, -- Has a unique immedaite
+            3b"100" when OP_JAL,
             3b"000" when others;
 
     -- consider branching for any branch type instructions
     with i_Opcode select
         o_branch <=
+            '1' when OP_BRANCH, 
+            '0' when others;
+
+    with i_Opcode select
+        o_jal <=
+            '1' when OP_JAL, 
+            '0' when others;
+
+    with i_Opcode select
+        o_jalr <=
             '1' when OP_BRANCH, 
             '0' when others;
 
