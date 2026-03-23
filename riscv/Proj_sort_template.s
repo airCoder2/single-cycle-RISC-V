@@ -30,5 +30,6 @@ main:
 
 # void sort(int* array, int size);
 .globl sort
+
 sort:
 # TODO: Implement your sorting algorithm here.

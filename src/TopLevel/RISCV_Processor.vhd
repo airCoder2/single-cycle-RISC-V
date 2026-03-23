@@ -382,7 +382,7 @@ begin
             generic map(N => 32)
             port map(
                      i_S  => s_jalr,
-                     i_D0 => s_PC, 
+                     i_D0 => s_PC, --changed
                      i_D1 => s_DATA_TO_READ1,
                      o_O  => s_branch_pc_addr_input_A);
 

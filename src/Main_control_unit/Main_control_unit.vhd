@@ -144,7 +144,7 @@ begin
 
     with i_Opcode select
         o_jalr <=
-            '1' when OP_BRANCH, 
+            '1' when OP_JALR, 
             '0' when others;
 
     with i_Opcode select
