@@ -35,10 +35,13 @@ architecture structural of one_bit_register is
 	end component mux2t1_structural;
 
 	signal mux_out : std_logic;
+    signal s_Q : std_logic;
 begin
 
+    s_Q <= o_Q;
+
 	mux: mux2t1_structural port map(
-			I0_IN => o_Q,
+			I0_IN => s_Q,
 			I1_IN => i_D,
 			S_IN  => i_WE,
 			F_OUT => mux_out);

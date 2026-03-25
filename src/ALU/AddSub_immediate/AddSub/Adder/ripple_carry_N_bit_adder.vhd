@@ -55,7 +55,7 @@ begin
 	c_out <= carry_signals(N-1);
 
 	OVERFLOW_DETECT: two_input_xor port map(
-			A => c_out,
+			A => carry_signals(N-1),
 			B => carry_signals(N-2),
 			F => overflow);
 

@@ -7,7 +7,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 
 entity N_bit_register is
-	generic(N : integer; Reset_value : std_logic_vector(N-1 downto 0));
+	generic(N : integer; Reset_value : std_logic_vector(31 downto 0));
 	port(i_CLK  : in std_logic;						   -- Clock input
 	   i_RST    : in std_logic;						   -- Reset input
 	   i_WE     : in std_logic;   					   -- All register connected

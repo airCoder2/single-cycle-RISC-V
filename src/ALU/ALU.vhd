@@ -13,6 +13,8 @@ entity ALU is
 		  i_B            : in std_logic_vector(31 downto 0);   -- 2nd operand rs2/imm
           i_ALU_select   : in std_logic_vector(2 downto 0);    -- ALU mux select
           i_ALU_nAdd_sub : in std_logic;                       -- ALU add sub control
+          i_logcl_arith  : in std_logic;                       -- is the shfit logical or arithmetic
+          i_right_left   : in std_logic;                       -- is the shift to the right or left
           i_ALU_lui      : in std_logic;                       -- mux select to chose shifted lui imm
           i_jal_or_jalr  : in std_logic;                       -- mux select that adds 0x4 to A
           o_eq           : out std_logic;
@@ -24,6 +26,15 @@ entity ALU is
 end entity ALU;
 
 architecture structural of ALU is
+
+    function or_bus(vec : std_logic_vector) return std_logic is
+        variable result : std_logic := '0';
+        begin
+            for i in vec'range loop
+                result := result or vec(i);
+            end loop;
+        return result;
+    end function;
 
     component Adder_Subtractor is
 	generic (N : integer := 32);
@@ -64,10 +75,23 @@ architecture structural of ALU is
               o_out : out std_logic_vector(31 downto 0));
     end component XOR_unit;
 
+    component Shifter is
+        port(
+             i_data : in std_logic_vector(31 downto 0);
+             i_shift_amount : in std_logic_vector(4 downto 0);
+             i_logcl_arith  : in std_logic;                       -- is the shfit logical or arithmetic
+             i_right_left   : in std_logic;                       -- is the shift to the right or left
+             o_shifted_data : out std_logic_vector(31 downto 0)
+            );
+    end component Shifter;
+
+
+
     signal s_Adder_out : std_logic_vector(31 downto 0);
     signal s_ALU_AND_out : std_logic_vector(31 downto 0);
     signal s_ALU_OR_out  : std_logic_vector(31 downto 0);
     signal s_ALU_XOR_out : std_logic_vector(31 downto 0);
+    signal s_ALU_Shifter_out : std_logic_vector(31 downto 0);
     signal s_ALU_component_out : std_logic_vector(31 downto 0);
 
     signal s_Adder_overflow : std_logic;
@@ -88,6 +112,14 @@ begin
                  nAdd_Sub => i_ALU_nAdd_sub, -- driven by ALU_control unit
                  sum      => s_Adder_out,
                  overflow => s_Adder_overflow);
+
+    Shifter_inst: Shifter
+        port map(i_data  => i_A,
+                 i_shift_amount => i_B(4 downto 0),
+                 i_logcl_arith  => i_logcl_arith,                       -- is the shfit logical or arithmetic
+                 i_right_left  => i_right_left,
+                 o_shifted_data => s_ALU_Shifter_out
+            );
 
 
     -- select either rs1 or extended PC
@@ -117,11 +149,12 @@ begin
                  i_B => i_B,
                  o_out => s_ALU_XOR_out);
 
+
     -- both have explanation on the diagram on why this works. I even have a truth table and a K-map
     s_signed_is_A_lt_B <= s_Adder_overflow xor s_Adder_out(31); -- diagram has the explanation
     s_unsigned_is_A_lt_b <= s_signed_is_A_lt_B xor i_A(31) xor i_B(31); -- could also use c_out, but
                                                                         -- it didn't make sense, so did my own way 
-    s_eq <= nor s_Adder_out;
+    s_eq <= not or_bus(s_Adder_out);
 
     o_lt  <= s_signed_is_A_lt_B;
     o_ltu <= s_unsigned_is_A_lt_B;
@@ -137,6 +170,7 @@ begin
                                    s_ALU_AND_out when 3b"011",
                                    s_ALU_OR_out  when 3b"100",
                                    s_ALU_XOR_out when 3b"101",
+                                   s_ALU_Shifter_out when 3b"110",
                                    32x"00000000" when others;
 
         -- when lui is 1, route immediate, which is i_B to reg

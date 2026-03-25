@@ -84,6 +84,8 @@ architecture structure of RISCV_Processor is
               i_B            : in std_logic_vector(31 downto 0);   -- 2nd operand rs2/imm
               i_ALU_select   : in std_logic_vector(2 downto 0);    -- ALU mux select
               i_ALU_nAdd_sub : in std_logic;                       -- ALU add sub control
+              i_logcl_arith  : in std_logic;                       -- is the shfit logical or arithmetic
+              i_right_left   : in std_logic;                       -- is the shift to the right or left
               i_ALU_lui      : in std_logic;                       -- mux select to chose shifted lui imm
               i_jal_or_jalr  : in std_logic;                       -- mux select that adds 0x4 to A
               o_eq           : out std_logic;
@@ -126,7 +128,10 @@ architecture structure of RISCV_Processor is
              i_func3       : in  std_logic_vector(2 downto 0);
              i_func7_5     : in  std_logic;
              o_alu_select  : out std_logic_vector(2 downto 0); -- choose what output should chose
-             o_nAdd_sub    : out std_logic); -- add subtraction flag for ALU
+             o_nAdd_sub    : out std_logic; -- add subtraction flag for ALU
+             o_logcl_arith : out std_logic;
+             o_right_left  : out std_logic
+         );
     end component ALU_control_unit;
 
     component mux2t1_N_dataflow is
@@ -200,6 +205,8 @@ architecture structure of RISCV_Processor is
     signal s_jal       : std_logic;
     signal s_jalr      : std_logic;
     signal s_ALU_select : std_logic_vector(2 downto 0); -- ALU mux select
+    signal s_logcl_arith : std_logic;  -- this is logical or arithmetic flag
+    signal s_right_left  : std_logic; -- this is the right of left shift flag
     signal s_ALU_nAdd_sub : std_logic; -- ALU add or sub flag, driven by ALU control unit
     signal s_ALU_out : std_logic_vector(31 downto 0);
     signal s_selected_mem_data : std_logic_vector(31 downto 0); -- this is after it goes through selector, final data to be written
@@ -304,7 +311,9 @@ begin
                  i_func3       => s_Inst(14 downto 12), -- must 
                  i_func7_5     => s_Inst(30), --must
                  o_alu_select  => s_ALU_select, -- ALU mux select
-                 o_nAdd_sub    => s_ALU_nAdd_sub -- add sub flag
+                 o_nAdd_sub    => s_ALU_nAdd_sub, -- add sub flag
+                 o_logcl_arith => s_logcl_arith,  -- this is logical or arithmetic flag
+                 o_right_left  => s_right_left    -- this is the right of left shift flag
                  );
 
 
@@ -339,6 +348,8 @@ begin
                  i_B            => s_ALU_B, -- either rs2 or imm
                  i_ALU_select   => s_ALU_select, -- which component's output should ALU output. 3 bit select
                  i_ALU_nAdd_sub => s_ALU_nAdd_sub,
+                 i_logcl_arith  => s_logcl_arith,                       -- is the shfit logical or arithmetic
+                 i_right_left   => s_right_left,                    -- is the shift to the right or left
                  i_ALU_lui      => s_ALU_lui, -- should we route imm << 12 directly to reg
                  i_jal_or_jalr  => s_jal or s_jalr,
                  o_eq           => s_ALU_eq,
