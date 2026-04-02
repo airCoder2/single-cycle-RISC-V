@@ -9,6 +9,7 @@ use IEEE.std_logic_1164.all;
 
 
 entity PC is
+    generic (Reset_value : std_logic_vector(31 downto 0));
     port(i_pc_in  : in  std_logic_vector(31 downto 0); -- new data to be written
          o_pc_out : out std_logic_vector(31 downto 0); -- pc output
          i_reset  : in  std_logic; -- reset to 0
@@ -28,7 +29,7 @@ architecture structural of PC is
 
 begin
     Reg: N_bit_register
-        generic map(N => 32, Reset_value => 32x"00400000")
+        generic map(N => 32, Reset_value => Reset_value)
         port map(
                  i_CLK => i_clk,
                  i_RST => i_reset, -- all the resets are connected to top level's reset

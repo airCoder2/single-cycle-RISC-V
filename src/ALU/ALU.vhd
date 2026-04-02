@@ -15,7 +15,6 @@ entity ALU is
           i_ALU_nAdd_sub : in std_logic;                       -- ALU add sub control
           i_logcl_arith  : in std_logic;                       -- is the shfit logical or arithmetic
           i_right_left   : in std_logic;                       -- is the shift to the right or left
-          i_ALU_lui      : in std_logic;                       -- mux select to chose shifted lui imm
           i_jal_or_jalr  : in std_logic;                       -- mux select that adds 0x4 to A
           o_eq           : out std_logic;
           o_lt           : out std_logic;
@@ -164,20 +163,15 @@ begin
 
 
         with i_ALU_select select
-            s_ALU_component_out <= s_Adder_out when 3b"000", -- add other cases for different components
-                                   (31x"00000000" & s_signed_is_A_lt_B)   when 3b"001", -- set reg to 1 when SLT
-                                   (31x"00000000" & s_unsigned_is_A_lt_B) when 3b"010", -- set reg to 1 when SLTU
-                                   s_ALU_AND_out when 3b"011",
-                                   s_ALU_OR_out  when 3b"100",
-                                   s_ALU_XOR_out when 3b"101",
-                                   s_ALU_Shifter_out when 3b"110",
-                                   32x"00000000" when others;
+            o_ALU_out <= s_Adder_out when 3b"000", -- add other cases for different components
+                         (31x"00000000" & s_signed_is_A_lt_B)   when 3b"001", -- set reg to 1 when SLT
+                         (31x"00000000" & s_unsigned_is_A_lt_B) when 3b"010", -- set reg to 1 when SLTU
+                         s_ALU_AND_out when 3b"011",
+                         s_ALU_OR_out  when 3b"100",
+                         s_ALU_XOR_out when 3b"101",
+                         s_ALU_Shifter_out when 3b"110",
+                         i_B when others; -- when lui, output the extended immediate
 
-        -- when lui is 1, route immediate, which is i_B to reg
-        with i_ALU_lui select
-            o_ALU_out <= s_ALU_component_out when '0', -- when not lui, then one of the chosen components
-                         i_B when '1', -- when lui, imm << 12
-                         32x"00000000" when others;
 
 end architecture structural;
 

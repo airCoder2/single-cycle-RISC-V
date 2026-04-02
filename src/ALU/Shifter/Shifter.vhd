@@ -1,7 +1,7 @@
 -- Date        : March 23, 2026
--- File        : Mux_32_to_1.vhd     
+-- File        : Shifter.vhd     
 -- Designer    : Salah Nasriddinov
--- Description : This file implements a shifter 
+-- Description : This file implements a barrel shifter 
 
 library IEEE;
 use IEEE.std_logic_1164.all;

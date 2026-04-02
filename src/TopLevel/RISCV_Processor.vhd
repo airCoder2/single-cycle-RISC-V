@@ -17,6 +17,7 @@ use IEEE.std_logic_1164.all;
 library work;
 use work.RISCV_types.all;
 
+-- all the external connections are used by the ToolFlow
 entity RISCV_Processor is
     generic(N : integer := 32);
     port(iCLK            : in std_logic;
@@ -33,6 +34,7 @@ architecture structure of RISCV_Processor is
 
     ----------------- COMPONENTS ---------------
 
+    -- mem component is used to infer Memory to store Instructions and Data
     component mem is
     generic(ADDR_WIDTH : integer;
             DATA_WIDTH : integer);
@@ -44,7 +46,9 @@ architecture structure of RISCV_Processor is
           q            : out std_logic_vector(31 downto 0));
     end component;
 
+    -- PC componnet is used to 
     component PC is
+        generic(Reset_value : std_logic_vector(31 downto 0));
         port(i_pc_in  : in  std_logic_vector(31 downto 0); -- new data to be written
              o_pc_out : out std_logic_vector(31 downto 0); -- pc output
              i_reset  : in  std_logic; -- reset to 0
@@ -86,7 +90,6 @@ architecture structure of RISCV_Processor is
               i_ALU_nAdd_sub : in std_logic;                       -- ALU add sub control
               i_logcl_arith  : in std_logic;                       -- is the shfit logical or arithmetic
               i_right_left   : in std_logic;                       -- is the shift to the right or left
-              i_ALU_lui      : in std_logic;                       -- mux select to chose shifted lui imm
               i_jal_or_jalr  : in std_logic;                       -- mux select that adds 0x4 to A
               o_eq           : out std_logic;
               o_lt           : out std_logic;
@@ -127,6 +130,7 @@ architecture structure of RISCV_Processor is
         port(i_alu_op      : in  std_logic_vector(1 downto 0);
              i_func3       : in  std_logic_vector(2 downto 0);
              i_func7_5     : in  std_logic;
+             i_lui         : in  std_logic; -- if lui, then just route i_B to out
              o_alu_select  : out std_logic_vector(2 downto 0); -- choose what output should chose
              o_nAdd_sub    : out std_logic; -- add subtraction flag for ALU
              o_logcl_arith : out std_logic;
@@ -196,7 +200,7 @@ architecture structure of RISCV_Processor is
     signal s_Imm_select    : std_logic_vector(2 downto 0);  -- select with extended immediate ALU should use
     signal s_ALU_A         : std_logic_vector(31 downto 0); -- one of rs1 or PC
     signal s_ALU_B         : std_logic_vector(31 downto 0); -- one of rs2 or imm
-    signal s_ALU_lui       : std_logic;  -- signal that goes to ALU, so it routes shifted immediate directly to reg when lui
+    signal s_lui       : std_logic;  -- signal that goes to ALU, so it routes shifted immediate directly to reg when lui
     signal s_ALU_op : std_logic_vector(1 downto 0); -- ALU opcode
     signal s_ALU_src : std_logic; -- reg2 or imm
     signal s_ALU_A_src : std_logic; -- reg1 or pc
@@ -262,6 +266,7 @@ begin
                  q    => s_DMemOut);
 
     PC_inst: PC
+        generic map(Reset_value => 32x"00400000")
         port map(
                  i_pc_in  => s_Next_pc, -- connect pc_in to pc_adder out
                  o_pc_out => s_PC, --must
@@ -297,7 +302,7 @@ begin
                  o_mem_WE      => s_DMemWr, --must
                  o_ALU_mem     => s_ALU_mem,
                  o_reg_file_WE => s_RegWr, -- must
-                 o_lui         => s_ALU_lui, -- chose shifter lui imm over ALU output
+                 o_lui         => s_lui, -- chose shifter lui imm over ALU output
                  o_branch      => s_branch,
                  o_jal         => s_jal,
                  o_jalr        => s_jalr,
@@ -310,6 +315,7 @@ begin
                  i_alu_op      => s_ALU_op,
                  i_func3       => s_Inst(14 downto 12), -- must 
                  i_func7_5     => s_Inst(30), --must
+                 i_lui         => s_lui, -- lui control signal coming from main control
                  o_alu_select  => s_ALU_select, -- ALU mux select
                  o_nAdd_sub    => s_ALU_nAdd_sub, -- add sub flag
                  o_logcl_arith => s_logcl_arith,  -- this is logical or arithmetic flag
@@ -350,7 +356,6 @@ begin
                  i_ALU_nAdd_sub => s_ALU_nAdd_sub,
                  i_logcl_arith  => s_logcl_arith,                       -- is the shfit logical or arithmetic
                  i_right_left   => s_right_left,                    -- is the shift to the right or left
-                 i_ALU_lui      => s_ALU_lui, -- should we route imm << 12 directly to reg
                  i_jal_or_jalr  => s_jal or s_jalr,
                  o_eq           => s_ALU_eq,
                  o_lt           => s_ALU_lt,
