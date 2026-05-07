@@ -1,21 +1,42 @@
+# =========================
+# QuestaSim / ModelSim
+# =========================
 
-# --- QuestaSim/ModelSim Files ---
-
-
-# Ignore libraries, logs, and simulation results
+# Work libraries
 work/
-*.wlf
 transcript
 vsim.wlf
+*.wlf
 *.log
 *.vstf
-*.vcd
-*.vpd
+
+# Coverage / simulation outputs
+*.ucdb
+cov/
+coverage/
+
+# Temporary simulation files
+*.stacktrace
+*.ini.bak
 modelsim.ini
 
-# Ignore simulation-generated temporary files
-*.tmp
+# Questa generated directories
+vsim_stacktrace.*
+questa_*
+wlft*
+.qsys_edit/
+
+# OS / editor noise
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Quartus/Intel tools sometimes used with Questa
+incremental_db/
+db/
+output_files/
+
+# Testbench-generated junk (optional but common)
+tb_*~
 *.bak
-*.cf
-
-
